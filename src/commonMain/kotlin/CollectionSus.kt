@@ -1,13 +1,13 @@
 package com.xingpeds.collectionsus
 
 interface IteratorSus<out T> {
-    suspend fun hasNext(): Boolean
+    suspend operator fun hasNext(): Boolean
 
-    suspend fun next(): T
+    suspend operator fun next(): T
 }
 
 interface IterableSus<out T> {
-    suspend fun iterator(): IteratorSus<T>
+    suspend operator fun iterator(): IteratorSus<T>
 }
 
 interface MutableIteratorSus<out T> : IteratorSus<T> {

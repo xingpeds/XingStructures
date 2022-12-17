@@ -4,6 +4,10 @@ import com.xingpeds.collectionsus.CollectionSus
 import com.xingpeds.collectionsus.IteratorSus
 import com.xingpeds.collectionsus.ListIteratorSus
 import com.xingpeds.collectionsus.ListSus
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 
@@ -73,26 +77,40 @@ fun <E> List<E>.toSuspendableList(): ListSus<E> {
          * Returns the index of the first occurrence of the specified element in the list, or -1 if
          * the specified element is not contained in the list.
          */
-        override suspend fun indexOf(element: E): Int = list.lastIndexOf(element)
+        override suspend fun indexOf(element: E): Int = list.indexOf(element)
 
         /** Returns the size of the collection. */
         override suspend fun size(): Int = list.size
 
         /** Checks if the specified element is contained in this collection. */
         override suspend fun contains(element: E): Boolean = list.contains(element)
-
         /** Checks if all elements in the specified collection are contained in this collection. */
         override suspend fun containsAll(elements: CollectionSus<E>): Boolean {
-            TODO("Not yet implemented")
+            return coroutineScope {
+                val size = elements.size()
+                val array = Array<Deferred<Boolean>?>(size) { null }
+                val iter = elements.iterator()
+                for (index in (0 until size)) {
+                    array[index] = async { list.contains(iter.next()) }
+                }
+                array.filterNotNull().awaitAll().all { it }
+            }
         }
 
         /** Returns `true` if the collection is empty (contains no elements), `false` otherwise. */
-        override suspend fun isEmpty(): Boolean {
-            TODO("Not yet implemented")
-        }
+        override suspend fun isEmpty(): Boolean = list.isEmpty()
 
         override suspend fun iterator(): IteratorSus<E> {
-            TODO("Not yet implemented")
+            val iter = list.iterator()
+            return object : IteratorSus<E> {
+                override suspend fun hasNext(): Boolean {
+                    return iter.hasNext()
+                }
+
+                override suspend fun next(): E {
+                    return iter.next()
+                }
+            }
         }
     }
 }

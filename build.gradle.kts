@@ -17,7 +17,15 @@ kotlin {
         withJava()
         testRuns["test"].executionTask.configure { useJUnitPlatform() }
     }
-    js(BOTH) { browser { commonWebpackConfig { cssSupport.enabled = true } } }
+    //    js(BOTH) {
+    //
+    //        //
+    //        browser {
+    //            //
+    //            commonWebpackConfig { cssSupport.enabled = true }
+    //        }
+    //    }
+
     val hostOs = System.getProperty("os.name")
     val isMingwX64 = hostOs.startsWith("Windows")
     val nativeTarget =
@@ -43,8 +51,8 @@ kotlin {
         val jvmTest by getting {
             dependencies { implementation("io.kotest:kotest-runner-junit5:5.5.4") }
         }
-        val jsMain by getting
-        val jsTest by getting
+        //        val jsMain by getting
+        //        val jsTest by getting
         val nativeMain by getting
         val nativeTest by getting
     }

@@ -88,7 +88,13 @@ class ToSuspenddableListTest {
     @Test
     fun indexOf() = runCoTest {
         forAll(Arb.list(Arb.int()), Arb.int()) { list, element ->
-            list.indexOf(element) == list.toSuspendableList().indexOf(element)
+            val expected = list.indexOf(element)
+            val actual = list.toSuspendableList().indexOf(element)
+            if (expected != actual) {
+                println("actual: $actual")
+                println("expected: $expected")
+            }
+            expected == actual
         }
     }
     @Test
@@ -96,6 +102,25 @@ class ToSuspenddableListTest {
         forAll(Arb.list(Arb.int((-5000..5000))), Arb.int((-5000..5000))) { list, element ->
             list.contains(element) == list.toSuspendableList().contains(element)
         }
+    }
+    @Test // this also tests the iterator. oops
+    fun containsAllIdentical() = runCoTest {
+        // this test is only useful if all other tests pass. meh
+        forAll(Arb.list(Arb.int())) { list ->
+            list.toSuspendableList().containsAll(list.toSuspendableList())
+        }
+    }
+    @Test
+    fun containsAllRandom() = runCoTest {
+        forAll(Arb.list(Arb.int()), Arb.list(Arb.int())) { list1, list2 ->
+            list1.containsAll(list2) ==
+                list1.toSuspendableList().containsAll(list2.toSuspendableList())
+        }
+    }
+
+    @Test
+    fun isEmpty() = runCoTest {
+        forAll(Arb.list(Arb.int())) { list -> list.isEmpty() == list.toSuspendableList().isEmpty() }
     }
 }
 
