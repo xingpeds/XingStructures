@@ -2,6 +2,7 @@
 
 package convertions
 
+import com.xingpeds.collectionsus.ListSus
 import com.xingpeds.collectionsus.convertions.toSuspendableList
 import io.kotest.property.Arb
 import io.kotest.property.PropertyContext
@@ -14,6 +15,15 @@ import kotlin.test.Test
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest as runCoTest
+
+suspend fun listContentsEqual(list: List<Int?>, suspendList: ListSus<Int?>): Boolean {
+    for (i in (0..list.lastIndex)) {
+        if (list[i] != suspendList[i].first()) {
+            return false
+        }
+    }
+    return true
+}
 
 class ToSuspenddableListTest {
 
@@ -42,13 +52,49 @@ class ToSuspenddableListTest {
     @Test
     fun nullableGetOperator() = runCoTest {
         forAll(Arb.list(Arb.int().orNull())) { list ->
-            val suspendList = list.toSuspendableList()
-            for (i in (0..list.lastIndex)) {
-                if (list[i] != suspendList[i].first()) {
-                    return@forAll false
+            listContentsEqual(list, list.toSuspendableList())
+        }
+    }
+    val lastIndexRange = (-500..500)
+    @Test
+    fun lastIndexOf() = runCoTest {
+        forAll(Arb.list(Arb.int(lastIndexRange)), Arb.int(lastIndexRange)) { list, element ->
+            val expected =
+                try {
+                    list.lastIndexOf(element)
+                } catch (expectException: Throwable) {
+                    try {
+                        list.toSuspendableList().lastIndexOf(element)
+                        return@forAll false
+                    } catch (actualException: Throwable) {
+                        return@forAll expectException::class.simpleName ==
+                            actualException::class.simpleName
+                    }
                 }
+            val actual = list.toSuspendableList().lastIndexOf(element)
+            actual == expected
+        }
+    }
+    @Test
+    fun at() = runCoTest {
+        forAll(Arb.list(Arb.int())) { list ->
+            val susList = list.toSuspendableList()
+            for ((index, element) in list.withIndex()) {
+                if (element != susList.at(index)) return@forAll false
             }
             true
+        }
+    }
+    @Test
+    fun indexOf() = runCoTest {
+        forAll(Arb.list(Arb.int()), Arb.int()) { list, element ->
+            list.indexOf(element) == list.toSuspendableList().indexOf(element)
+        }
+    }
+    @Test
+    fun contains() = runCoTest {
+        forAll(Arb.list(Arb.int((-5000..5000))), Arb.int((-5000..5000))) { list, element ->
+            list.contains(element) == list.toSuspendableList().contains(element)
         }
     }
 }
@@ -288,6 +334,33 @@ class ToSuspendableListIteratorTestWithArgs {
                 is IndexOutOfBoundsException -> expected is IndexOutOfBoundsException
                 else -> false
             }
+        }
+    }
+}
+
+class ToSuspendingListSubList {
+    val range = (0..100)
+    @Test
+    fun sublist() = runCoTest {
+        forAll(Arb.list(Arb.int(), range), Arb.int(range), Arb.int(range)) {
+            list,
+            fromIndex,
+            toIndex ->
+            val expected =
+                try {
+                    list.subList(fromIndex, toIndex)
+                } catch (expectedExpection: Throwable) {
+                    try {
+                        list.toSuspendableList().subList(fromIndex, toIndex)
+                        return@forAll false
+                    } catch (actualException: Throwable) {
+                        return@forAll expectedExpection::class.simpleName ==
+                            actualException::class.simpleName
+                    }
+                    return@forAll false
+                }
+            val actual = list.toSuspendableList().subList(fromIndex, toIndex)
+            listContentsEqual(expected, actual)
         }
     }
 }

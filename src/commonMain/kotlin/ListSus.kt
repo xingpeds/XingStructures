@@ -1,6 +1,5 @@
 package com.xingpeds.collectionsus
 
-import kotlin.collections.List
 import kotlinx.coroutines.flow.Flow
 
 interface ListSus<out E> : CollectionSus<E> {
@@ -10,6 +9,9 @@ interface ListSus<out E> : CollectionSus<E> {
     // Positional Access Operations
     /** Returns the element at the specified index in the list. */
     operator fun get(index: Int): Flow<E>
+
+    /** return the element at the specified index. Use this if you do not want to use Flows */
+    suspend fun at(index: Int): E
 
     // Search Operations
     /**
@@ -42,7 +44,7 @@ interface ListSus<out E> : CollectionSus<E> {
      *
      * Structural changes in the base list make the behavior of the view undefined.
      */
-    suspend fun subList(fromIndex: Int, toIndex: Int): List<E>
+    suspend fun subList(fromIndex: Int, toIndex: Int): ListSus<E>
 }
 
 interface MutableListSus<E> : ListSus<E>, MutableCollectionSus<E> {

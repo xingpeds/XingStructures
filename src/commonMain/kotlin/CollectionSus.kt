@@ -68,10 +68,10 @@ interface CollectionSus<out T> : IterableSus<T> {
     suspend fun size(): Int
 
     /** Checks if the specified element is contained in this collection. */
-    suspend fun contains(element: Int): Boolean
+    suspend fun contains(element: @UnsafeVariance T): Boolean
 
     /** Checks if all elements in the specified collection are contained in this collection. */
-    suspend fun containsAll(elements: CollectionSus<Int>): Boolean
+    suspend fun containsAll(elements: CollectionSus<@UnsafeVariance T>): Boolean
 
     /** Returns `true` if the collection is empty (contains no elements), `false` otherwise. */
     suspend fun isEmpty(): Boolean

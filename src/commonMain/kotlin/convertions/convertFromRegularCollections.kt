@@ -12,6 +12,8 @@ fun <E> List<E>.toSuspendableList(): ListSus<E> {
     return object : ListSus<E> {
         /** Returns the element at the specified index in the list. */
         override fun get(index: Int): Flow<E> = flowOf(list[index])
+        override suspend fun at(index: Int): E = list[index]
+
         private inner class ListIterator(
             private val iter: kotlin.collections.ListIterator<E> = list.listIterator()
         ) : ListIteratorSus<E> {
@@ -57,36 +59,30 @@ fun <E> List<E>.toSuspendableList(): ListSus<E> {
          *
          * Structural changes in the base list make the behavior of the view undefined.
          */
-        override suspend fun subList(fromIndex: Int, toIndex: Int): List<E> {
-            TODO("Not yet implemented")
+        override suspend fun subList(fromIndex: Int, toIndex: Int): ListSus<E> {
+            return list.subList(fromIndex, toIndex).toSuspendableList()
         }
 
         /**
          * Returns the index of the last occurrence of the specified element in the list, or -1 if
          * the specified element is not contained in the list.
          */
-        override suspend fun lastIndexOf(element: E): Int {
-            TODO("Not yet implemented")
-        }
+        override suspend fun lastIndexOf(element: E): Int = list.lastIndexOf(element)
 
         /**
          * Returns the index of the first occurrence of the specified element in the list, or -1 if
          * the specified element is not contained in the list.
          */
-        override suspend fun indexOf(element: E): Int {
-            TODO("Not yet implemented")
-        }
+        override suspend fun indexOf(element: E): Int = list.lastIndexOf(element)
 
         /** Returns the size of the collection. */
         override suspend fun size(): Int = list.size
 
         /** Checks if the specified element is contained in this collection. */
-        override suspend fun contains(element: Int): Boolean {
-            TODO("Not yet implemented")
-        }
+        override suspend fun contains(element: E): Boolean = list.contains(element)
 
         /** Checks if all elements in the specified collection are contained in this collection. */
-        override suspend fun containsAll(elements: CollectionSus<Int>): Boolean {
+        override suspend fun containsAll(elements: CollectionSus<E>): Boolean {
             TODO("Not yet implemented")
         }
 

@@ -1,4 +1,9 @@
-plugins { kotlin("multiplatform") version "1.7.20" }
+plugins {
+    kotlin("multiplatform") version "1.7.20"
+    jacoco
+}
+
+jacoco { toolVersion = "0.8.5" }
 
 group = "com.xingpeds"
 
