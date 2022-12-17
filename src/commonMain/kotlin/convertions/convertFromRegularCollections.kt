@@ -12,19 +12,43 @@ fun <E> List<E>.toSuspendableList(): ListSus<E> {
     return object : ListSus<E> {
         /** Returns the element at the specified index in the list. */
         override fun get(index: Int): Flow<E> = flowOf(list[index])
+        private inner class ListIterator(
+            private val iter: kotlin.collections.ListIterator<E> = list.listIterator()
+        ) : ListIteratorSus<E> {
+            /** Returns `true` if there are elements in the iteration before the current element. */
+            override suspend fun hasPrevious(): Boolean = iter.hasPrevious()
 
-        /** Returns a list iterator over the elements in this list (in proper sequence). */
-        override suspend fun listIterator(): ListIteratorSus<E> {
-            TODO("Not yet implemented")
+            /**
+             * Returns the previous element in the iteration and moves the cursor position
+             * backwards.
+             */
+            override suspend fun previous(): E = iter.previous()
+
+            /**
+             * Returns the index of the element that would be returned by a subsequent call to
+             * [next].
+             */
+            override suspend fun nextIndex(): Int = iter.nextIndex()
+
+            /**
+             * Returns the index of the element that would be returned by a subsequent call to
+             * [previous].
+             */
+            override suspend fun previousIndex(): Int = iter.previousIndex()
+
+            override suspend fun hasNext(): Boolean = iter.hasNext()
+
+            override suspend fun next(): E = iter.next()
         }
 
+        /** Returns a list iterator over the elements in this list (in proper sequence). */
+        override suspend fun listIterator(): ListIteratorSus<E> = ListIterator(list.listIterator())
         /**
          * Returns a list iterator over the elements in this list (in proper sequence), starting at
          * the specified [index].
          */
-        override suspend fun listIterator(index: Int): ListIteratorSus<E> {
-            TODO("Not yet implemented")
-        }
+        override suspend fun listIterator(index: Int): ListIteratorSus<E> =
+            ListIterator(list.listIterator(index))
 
         /**
          * Returns a view of the portion of this list between the specified [fromIndex] (inclusive)
@@ -54,9 +78,7 @@ fun <E> List<E>.toSuspendableList(): ListSus<E> {
         }
 
         /** Returns the size of the collection. */
-        override suspend fun size(): Int {
-            TODO("Not yet implemented")
-        }
+        override suspend fun size(): Int = list.size
 
         /** Checks if the specified element is contained in this collection. */
         override suspend fun contains(element: Int): Boolean {

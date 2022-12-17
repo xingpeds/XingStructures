@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalCoroutinesApi::class)
+
 package convertions
 
 import com.xingpeds.collectionsus.convertions.toSuspendableList
@@ -14,7 +16,15 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest as runCoTest
 
 class ToSuspenddableListTest {
-    @OptIn(ExperimentalCoroutinesApi::class)
+
+    @Test
+    fun size() = runCoTest {
+        forAll(Arb.list(Arb.int())) {
+            val susList = it.toSuspendableList()
+            it.size == susList.size()
+        }
+    }
+
     @Test
     fun nonNullGetOperator() = runCoTest {
         fun <T> compareLists(): suspend PropertyContext.(List<T>) -> Boolean = { list ->
@@ -39,6 +49,245 @@ class ToSuspenddableListTest {
                 }
             }
             true
+        }
+    }
+}
+
+class ToSuspendableListIteratorTest {
+
+    @Test
+    fun hasPrevious() = runCoTest {
+        forAll(Arb.list(Arb.int())) { list ->
+            val expected =
+                try {
+                    list.listIterator().hasPrevious()
+                } catch (e: Throwable) {
+                    e
+                }
+            val actual =
+                try {
+                    list.toSuspendableList().listIterator().hasPrevious()
+                } catch (e: Throwable) {
+                    e
+                }
+            when (actual) {
+                is Throwable -> {
+                    actual as Throwable == expected as Throwable
+                }
+                is Boolean -> {
+                    actual as Boolean == expected as Boolean
+                }
+                else -> {
+                    false
+                }
+            }
+        }
+    }
+    @Test
+    fun previous() = runCoTest {
+        forAll(Arb.list(Arb.int())) {
+            val expexted =
+                try {
+                    it.listIterator().previous()
+                } catch (e: Throwable) {
+                    e
+                }
+            val actual =
+                try {
+                    it.toSuspendableList().listIterator().previous()
+                } catch (e: Throwable) {
+                    e
+                }
+            when (actual) {
+                is Int -> actual as Int == expexted as Int
+                is NoSuchElementException -> expexted is NoSuchElementException
+                else -> false
+            }
+        }
+    }
+    @Test
+    fun nextIndex() = runCoTest {
+        forAll(Arb.list(Arb.int())) {
+            it.listIterator().nextIndex() == it.toSuspendableList().listIterator().nextIndex()
+        }
+    }
+    @Test
+    fun previousIndex() = runCoTest {
+        forAll(Arb.list(Arb.int())) {
+            it.listIterator().previousIndex() ==
+                it.toSuspendableList().listIterator().previousIndex()
+        }
+    }
+    @Test
+    fun hasNext() = runCoTest {
+        forAll(Arb.list(Arb.int())) {
+            it.listIterator().hasNext() == it.toSuspendableList().listIterator().hasNext()
+        }
+    }
+    @Test
+    fun next() = runCoTest {
+        forAll(Arb.list(Arb.int())) {
+            val expected =
+                try {
+                    it.listIterator().next()
+                } catch (e: Throwable) {
+                    e
+                }
+            val actual =
+                try {
+                    it.toSuspendableList().listIterator().next()
+                } catch (e: Throwable) {
+                    e
+                }
+            when (actual) {
+                is Int -> actual as Int == expected as Int
+                is NoSuchElementException -> expected is NoSuchElementException
+                else -> false
+            }
+        }
+    }
+}
+
+class ToSuspendableListIteratorTestWithArgs {
+    val range = (0..100)
+    val listArb = Arb.list(Arb.int(), range)
+    val indexArb = Arb.int(range)
+    @Test
+    fun hasPrevious() = runCoTest {
+        forAll<List<Int>, Int>(listArb, indexArb) { list, index ->
+            val expected =
+                try {
+                    list.listIterator(index).hasPrevious()
+                } catch (e: Throwable) {
+                    e
+                }
+            val actual =
+                try {
+                    list.toSuspendableList().listIterator(index).hasPrevious()
+                } catch (e: Throwable) {
+                    e
+                }
+            when (actual) {
+                is Boolean -> {
+                    actual as Boolean == expected as Boolean
+                }
+                is IndexOutOfBoundsException -> expected is IndexOutOfBoundsException
+                else -> {
+                    false
+                }
+            }
+        }
+    }
+    @Test
+    fun previous() = runCoTest {
+        forAll<List<Int>, Int>(listArb, indexArb) { list, index ->
+            val expexted =
+                try {
+                    list.listIterator(index).previous()
+                } catch (e: Throwable) {
+                    e
+                }
+            val actual =
+                try {
+                    list.toSuspendableList().listIterator(index).previous()
+                } catch (e: Throwable) {
+                    e
+                }
+            when (actual) {
+                is Int -> actual as Int == expexted as Int
+                is NoSuchElementException -> expexted is NoSuchElementException
+                is IndexOutOfBoundsException -> expexted is IndexOutOfBoundsException
+                else -> false
+            }
+        }
+    }
+    @Test
+    fun nextIndex() = runCoTest {
+        forAll<List<Int>, Int>(listArb, indexArb) { list, index ->
+            val expected =
+                try {
+                    list.listIterator(index).nextIndex()
+                } catch (e: Throwable) {
+                    e
+                }
+            val actual =
+                try {
+                    list.toSuspendableList().listIterator(index).nextIndex()
+                } catch (e: Throwable) {
+                    e
+                }
+            when (expected) {
+                is Int -> expected as Int == actual as Int
+                is IndexOutOfBoundsException -> actual is IndexOutOfBoundsException
+                else -> false
+            }
+        }
+    }
+    @Test
+    fun previousIndex() = runCoTest {
+        forAll<List<Int>, Int>(listArb, indexArb) { list, index ->
+            val expected =
+                try {
+                    list.listIterator(index).previousIndex()
+                } catch (e: Throwable) {
+                    e
+                }
+            val actual =
+                try {
+                    list.toSuspendableList().listIterator(index).previousIndex()
+                } catch (e: Throwable) {
+                    e
+                }
+            when (actual) {
+                is Int -> actual as Int == expected as Int
+                is IndexOutOfBoundsException -> expected is IndexOutOfBoundsException
+                else -> false
+            }
+        }
+    }
+    @Test
+    fun hasNext() = runCoTest {
+        forAll<List<Int>, Int>(listArb, indexArb) { list, index ->
+            val expected =
+                try {
+                    list.listIterator(index).hasNext()
+                } catch (e: Throwable) {
+                    e
+                }
+            val actual =
+                try {
+                    list.toSuspendableList().listIterator(index).hasNext()
+                } catch (e: Throwable) {
+                    e
+                }
+            when (actual) {
+                is Boolean -> actual as Boolean == expected as Boolean
+                is IndexOutOfBoundsException -> expected is IndexOutOfBoundsException
+                else -> false
+            }
+        }
+    }
+    @Test
+    fun next() = runCoTest {
+        forAll<List<Int>, Int>(listArb, indexArb) { list, index ->
+            val expected =
+                try {
+                    list.listIterator(index).next()
+                } catch (e: Throwable) {
+                    e
+                }
+            val actual =
+                try {
+                    list.toSuspendableList().listIterator(index).next()
+                } catch (e: Throwable) {
+                    e
+                }
+            when (actual) {
+                is Int -> actual as Int == expected as Int
+                is NoSuchElementException -> expected is NoSuchElementException
+                is IndexOutOfBoundsException -> expected is IndexOutOfBoundsException
+                else -> false
+            }
         }
     }
 }
